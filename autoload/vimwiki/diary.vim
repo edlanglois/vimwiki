@@ -75,7 +75,6 @@ function! s:get_first_header(fl, ...)
 
   for line in readfile(a:fl, '', s:vimwiki_max_scan_for_caption)
     if line =~# l:pattern
-      echom 'first: '.vimwiki#u#trim(matchstr(line, l:pattern))
       return vimwiki#u#trim(matchstr(line, l:pattern))
     endif
   endfor
@@ -88,7 +87,6 @@ function! s:get_all_headers(fl, level)
   let l:pattern = vimwiki#vars#get_syntaxlocal('rxH'.a:level)
   for line in readfile(a:fl, '')
     if line =~# l:pattern
-      echom 'all: '.vimwiki#u#trim(matchstr(line, l:pattern))
       call add(l:headers, vimwiki#u#trim(matchstr(line, l:pattern)))
     endif
   endfor
@@ -99,7 +97,6 @@ endfunction
 function! s:read_captions(files)
   let result = {}
   let subcaption_level = vimwiki#vars#get_wikilocal('diary_subcaption_level')
-  echom 'subcaption_level '.subcaption_level
 
   for fl in a:files
     " remove paths and extensions
