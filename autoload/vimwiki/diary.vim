@@ -11,7 +11,7 @@ let g:loaded_vimwiki_diary_auto = 1
 
 
 let s:vimwiki_max_scan_for_caption = 5
-
+" diary index header level
 
 function! s:prefix_zero(num)
   if a:num < 10
@@ -63,24 +63,64 @@ function! s:get_month_name(month)
   return vimwiki#vars#get_global('diary_months')[str2nr(a:month)]
 endfunction
 
+function! s:get_first_header(fl, ...)
+  " Get the first header in the file within the first s:vimwiki_max_scan_for_caption lines.
+  " If the optional argument 'level' is passed, the header must be at that level.
+  " A level of -1 means any level.
+  let a:level = get(a:, 1, -1)
+  if a:level == -1
+    let l:pattern = vimwiki#vars#get_syntaxlocal('rxHeader')
+  else
+    let l:pattern = vimwiki#vars#get_syntaxlocal('rxH'.a:level)
+
+  for line in readfile(a:fl, '', s:vimwiki_max_scan_for_caption)
+    if line =~# l:pattern
+      return vimwiki#u#trim(matchstr(line, l:pattern))
+    endif
+  endfor
+  return ''
+endfunction
+
+function! s:get_all_headers(fl, level)
+  " Get all headers in a file at the given level.
+  let l:headers = []
+  let l:pattern = vimwiki#vars#get_syntaxlocal('rxH'.a:level)
+  for line in readfile(a:fl, '')
+    if line =~# l:pattern
+      call add(l:headers, vimwiki#u#trim(matchstr(line, rx_header)))
+    endif
+  endfor
+  return l:headers
+endfunction
+
 
 function! s:read_captions(files)
   let result = {}
-  let rx_header = vimwiki#vars#get_syntaxlocal('rxHeader')
+  let subcaption_level = vimwiki#vars#get_wikilocal('diary_subcaption_level')
+  let caption_level = subcaption_level - 1
+  if caption_level < 1
+    caption_level = -1
+  endif
+  echom 'subcaption_level '.subcaption_level
+
   for fl in a:files
     " remove paths and extensions
     let fl_key = substitute(fnamemodify(fl, ':t'), vimwiki#vars#get_wikilocal('ext').'$', '', '')
+    let result[fl_key] = {}
 
     if filereadable(fl)
-      for line in readfile(fl, '', s:vimwiki_max_scan_for_caption)
-        if line =~# rx_header && !has_key(result, fl_key)
-          let result[fl_key] = vimwiki#u#trim(matchstr(line, rx_header))
+      if subcaption_level < 1 " No sub-captions
+        let result[fl_key]['top'] = s:get_first_header(fl)
+        let result[fl_key]['sub'] = []
+      else:
+        let result[fl_key]['sub'] = s:get_all_headers(fl, subcaption_level)
+        if subcaption_level == 1 " No top-level caption
+          let result[fl_key]['top'] = ''
+        else:
+          let result[fl_key]['top'] = s:get_first_header(fl, subcaption_level - 1)
         endif
-      endfor
-    endif
+      endif
 
-    if !has_key(result, fl_key)
-      let result[fl_key] = ''
     endif
 
   endfor
@@ -149,18 +189,26 @@ function! s:format_diary()
       call add(result, substitute(vimwiki#vars#get_syntaxlocal('rxH3_Template'),
             \ '__Header__', s:get_month_name(month), ''))
 
-      for [fl, cap] in s:sort(items(g_files[year][month]))
-        if empty(cap)
+      for [fl, captions] in s:sort(items(g_files[year][month]))
+        let topcap = captions['top']
+        if empty(topcap)
           let entry = substitute(vimwiki#vars#get_global('WikiLinkTemplate1'),
                 \ '__LinkUrl__', fl, '')
-          let entry = substitute(entry, '__LinkDescription__', cap, '')
+          let entry = substitute(entry, '__LinkDescription__', topcap, '')
           call add(result, repeat(' ', vimwiki#lst#get_list_margin()).'* '.entry)
         else
           let entry = substitute(vimwiki#vars#get_global('WikiLinkTemplate2'),
                 \ '__LinkUrl__', fl, '')
-          let entry = substitute(entry, '__LinkDescription__', cap, '')
+          let entry = substitute(entry, '__LinkDescription__', topcap, '')
           call add(result, repeat(' ', vimwiki#lst#get_list_margin()).'* '.entry)
         endif
+
+        for subcap in captions['sub']
+          let entry = substitute(vimwiki#vars#get_global('WikiLinkTemplate1'),
+                \ '__LinkUrl__', fl.'#'.subcap, '')
+          let entry = substitute(entry, '__LinkDescription__', subcap, '')
+          call add(result, repeat(' ', vimwiki#lst#get_list_margin() * 2).'- '.entry)
+        endfo
       endfor
 
     endfor

@@ -191,6 +191,7 @@ function! s:populate_wikilocal_options()
         \ 'diary_header': 'Diary',
         \ 'diary_index': 'diary',
         \ 'diary_rel_path': 'diary/',
+        \ 'diary_subcaption_level': -1,
         \ 'diary_sort': 'desc',
         \ 'ext': '.wiki',
         \ 'index': 'index',
