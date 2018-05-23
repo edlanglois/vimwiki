@@ -321,6 +321,8 @@ function! vimwiki#vars#populate_syntax_vars(syntax)
       let g:vimwiki_syntax_variables[a:syntax]['rxH'.i.'_Template'] =
             \ repeat(header_symbol, i).' __Header__'
       let g:vimwiki_syntax_variables[a:syntax]['rxH'.i] =
+            \ '^\s*'.header_symbol.'\{'.i.'}[^'.header_symbol.'].*$'
+      let g:vimwiki_syntax_variables[a:syntax]['rxH'.i.'_Text'] =
             \ '^\s*'.header_symbol.'\{'.i.'}\zs[^'.header_symbol.'].*\ze$'
       let g:vimwiki_syntax_variables[a:syntax]['rxH'.i.'_Start'] =
             \ '^\s*'.header_symbol.'\{'.i.'}[^'.header_symbol.'].*$'
