@@ -112,11 +112,11 @@ function! s:read_captions(files)
       if subcaption_level < 1 " No sub-captions
         let result[fl_key]['top'] = s:get_first_header(fl)
         let result[fl_key]['sub'] = []
-      else:
+      else
         let result[fl_key]['sub'] = s:get_all_headers(fl, subcaption_level)
         if subcaption_level == 1 " No top-level caption
           let result[fl_key]['top'] = ''
-        else:
+        else
           let result[fl_key]['top'] = s:get_first_header(fl, subcaption_level - 1)
         endif
       endif
