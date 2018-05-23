@@ -11,7 +11,6 @@ let g:loaded_vimwiki_diary_auto = 1
 
 
 let s:vimwiki_max_scan_for_caption = 5
-" diary index header level
 
 function! s:prefix_zero(num)
   if a:num < 10

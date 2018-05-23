@@ -301,8 +301,8 @@ function! vimwiki#vars#populate_syntax_vars(syntax)
       let g:vimwiki_syntax_variables[a:syntax]['rxH'.i.'_Template'] =
             \ repeat(header_symbol, i).' __Header__ '.repeat(header_symbol, i)
       let g:vimwiki_syntax_variables[a:syntax]['rxH'.i] =
-            \ '^\s*'.header_symbol.'\{'.i.'}[^'.header_symbol.'].*[^'.header_symbol.']'
-            \ .header_symbol.'\{'.i.'}\s*$'
+            \ '^\s*'.header_symbol.'\{'.i.'}\zs[^'.header_symbol.'].*[^'.header_symbol.']'
+            \ .header_symbol.'\{'.i.'}\ze\s*$'
       let g:vimwiki_syntax_variables[a:syntax]['rxH'.i.'_Start'] =
             \ '^\s*'.header_symbol.'\{'.i.'}[^'.header_symbol.'].*[^'.header_symbol.']'
             \ .header_symbol.'\{'.i.'}\s*$'
@@ -318,7 +318,7 @@ function! vimwiki#vars#populate_syntax_vars(syntax)
       let g:vimwiki_syntax_variables[a:syntax]['rxH'.i.'_Template'] =
             \ repeat(header_symbol, i).' __Header__'
       let g:vimwiki_syntax_variables[a:syntax]['rxH'.i] =
-            \ '^\s*'.header_symbol.'\{'.i.'}[^'.header_symbol.'].*$'
+            \ '^\s*'.header_symbol.'\{'.i.'}\zs[^'.header_symbol.'].*\ze$'
       let g:vimwiki_syntax_variables[a:syntax]['rxH'.i.'_Start'] =
             \ '^\s*'.header_symbol.'\{'.i.'}[^'.header_symbol.'].*$'
       let g:vimwiki_syntax_variables[a:syntax]['rxH'.i.'_End'] =
