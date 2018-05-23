@@ -72,6 +72,7 @@ function! s:get_first_header(fl, ...)
     let l:pattern = vimwiki#vars#get_syntaxlocal('rxHeader')
   else
     let l:pattern = vimwiki#vars#get_syntaxlocal('rxH'.a:level)
+  endif
 
   for line in readfile(a:fl, '', s:vimwiki_max_scan_for_caption)
     if line =~# l:pattern
