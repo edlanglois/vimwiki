@@ -68,14 +68,14 @@ function! s:get_first_header(fl, ...)
   " A level of -1 means any level.
   let a:level = get(a:, 1, -1)
   if a:level == -1
-    let l:pattern = vimwiki#vars#get_syntaxlocal('rxHeader')
+    let l:header_rx = vimwiki#vars#get_syntaxlocal('rxHeader')
   else
-    let l:pattern = vimwiki#vars#get_syntaxlocal('rxH'.a:level)
+    let l:header_rx = vimwiki#vars#get_syntaxlocal('rxH'.a:level.'_Text')
   endif
 
   for line in readfile(a:fl, '', s:vimwiki_max_scan_for_caption)
-    if line =~# l:pattern
-      return vimwiki#u#trim(matchstr(line, l:pattern))
+    if line =~# l:header_rx
+      return vimwiki#u#trim(matchstr(line, l:header_rx))
     endif
   endfor
   return ''
@@ -84,10 +84,10 @@ endfunction
 function! s:get_all_headers(fl, level)
   " Get all headers in a file at the given level.
   let l:headers = []
-  let l:pattern = vimwiki#vars#get_syntaxlocal('rxH'.a:level)
+  let l:header_rx = vimwiki#vars#get_syntaxlocal('rxH'.a:level.'_Text')
   for line in readfile(a:fl, '')
-    if line =~# l:pattern
-      call add(l:headers, vimwiki#u#trim(matchstr(line, l:pattern)))
+    if line =~# l:header_rx
+      call add(l:headers, vimwiki#u#trim(matchstr(line, l:header_rx)))
     endif
   endfor
   return l:headers
