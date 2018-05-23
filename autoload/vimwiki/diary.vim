@@ -76,6 +76,7 @@ function! s:get_first_header(fl, ...)
 
   for line in readfile(a:fl, '', s:vimwiki_max_scan_for_caption)
     if line =~# l:pattern
+      echom 'first: '.vimwiki#u#trim(matchstr(line, l:pattern))
       return vimwiki#u#trim(matchstr(line, l:pattern))
     endif
   endfor
@@ -88,6 +89,7 @@ function! s:get_all_headers(fl, level)
   let l:pattern = vimwiki#vars#get_syntaxlocal('rxH'.a:level)
   for line in readfile(a:fl, '')
     if line =~# l:pattern
+      echom 'all: '.vimwiki#u#trim(matchstr(line, l:pattern))
       call add(l:headers, vimwiki#u#trim(matchstr(line, l:pattern)))
     endif
   endfor
@@ -201,7 +203,7 @@ function! s:format_diary()
         endif
 
         for subcap in captions['sub']
-          let entry = substitute(vimwiki#vars#get_global('WikiLinkTemplate1'),
+          let entry = substitute(vimwiki#vars#get_global('WikiLinkTemplate2'),
                 \ '__LinkUrl__', fl.'#'.subcap, '')
           let entry = substitute(entry, '__LinkDescription__', subcap, '')
           call add(result, repeat(' ', vimwiki#lst#get_list_margin() * 2).'- '.entry)
