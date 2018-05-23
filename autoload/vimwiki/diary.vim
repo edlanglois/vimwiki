@@ -88,7 +88,7 @@ function! s:get_all_headers(fl, level)
   let l:pattern = vimwiki#vars#get_syntaxlocal('rxH'.a:level)
   for line in readfile(a:fl, '')
     if line =~# l:pattern
-      call add(l:headers, vimwiki#u#trim(matchstr(line, rx_header)))
+      call add(l:headers, vimwiki#u#trim(matchstr(line, l:pattern)))
     endif
   endfor
   return l:headers
