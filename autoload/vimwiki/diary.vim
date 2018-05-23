@@ -98,10 +98,6 @@ endfunction
 function! s:read_captions(files)
   let result = {}
   let subcaption_level = vimwiki#vars#get_wikilocal('diary_subcaption_level')
-  let caption_level = subcaption_level - 1
-  if caption_level < 1
-    caption_level = -1
-  endif
   echom 'subcaption_level '.subcaption_level
 
   for fl in a:files
