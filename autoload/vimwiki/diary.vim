@@ -140,7 +140,7 @@ function! s:read_captions(files)
       if caption_level == 0
         " Take first header of any level as the top caption.
         let l:fl_captions['top'] = s:get_first_header(fl)
-      else:
+      else
         let l:headers = s:get_all_headers(fl, caption_level)
         if len(l:headers) > 0
           " If first header is the only one at its level or less, then make it the top caption.
