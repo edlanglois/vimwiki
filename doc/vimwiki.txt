@@ -2230,8 +2230,8 @@ Possible values:
  2:  Captions are created for headers up to level 2 in the diary page.
  etc.
 
-When the value is >= 1, the primary caption of each diary page is set to the
-unique lowest-level header if one exists.
+When the value is >= 1, the primary caption of each diary page is set to first
+header read from that page if it is the unique lowest-level header.
 
 *vimwiki-option-custom_wiki2html*
 ------------------------------------------------------------------------------

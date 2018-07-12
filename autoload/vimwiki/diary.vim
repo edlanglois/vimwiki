@@ -12,6 +12,7 @@ let g:loaded_vimwiki_diary_auto = 1
 
 let s:vimwiki_max_scan_for_caption = 5
 
+
 function! s:prefix_zero(num)
   if a:num < 10
     return '0'.a:num
