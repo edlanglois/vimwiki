@@ -121,6 +121,7 @@ function! s:get_min_header_level(headers)
     let l:minlevel = min([l:minlevel, l:level])
   endfor
   return l:minlevel
+endfunction
 
 
 function! s:read_captions(files)
