@@ -192,7 +192,7 @@ function! s:populate_wikilocal_options()
         \ 'diary_index': 'diary',
         \ 'diary_rel_path': 'diary/',
         \ 'diary_sort': 'desc',
-        \ 'diary_subcaption_level': -1,
+        \ 'diary_caption_level': 0,
         \ 'ext': '.wiki',
         \ 'index': 'index',
         \ 'list_margin': -1,

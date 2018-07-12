@@ -81,43 +81,83 @@ function! s:get_first_header(fl, ...)
   return ''
 endfunction
 
-function! s:get_all_headers(fl, level)
-  " Get all headers in a file at the given level.
+function! s:get_all_headers(fl, maxlevel)
+  " Get a list of all headers in a file up to a given level.
+  " Returns a list whose elements are pairs [level, title]
+  let l:headers_rx = {}
+  for i in range(1, a:maxlevel)
+    let l:headers_rx[i] = vimwiki#vars#get_syntaxlocal('rxH'.i.'_Text')
+  endfor
+
   let l:headers = []
-  let l:header_rx = vimwiki#vars#get_syntaxlocal('rxH'.a:level.'_Text')
   for line in readfile(a:fl, '')
-    if line =~# l:header_rx
-      call add(l:headers, vimwiki#u#trim(matchstr(line, l:header_rx)))
-    endif
+    for [i, header_rx] in items(l:headers_rx)
+      if line =~# l:header_rx
+        call add(l:headers, [i, vimwiki#u#trim(matchstr(line, l:header_rx))])
+        break
+      endif
+    endfor
   endfor
   return l:headers
 endfunction
 
+function! s:count_headers_level_less_equal(headers, maxlevel)
+  " Count headers with level <=  maxlevel in a list of [level, title] pairs.
+  let l:count = 0
+  for [header_level, _] in a:headers
+    if header_level <= level
+      let l:count += 1
+    endif
+  endfor
+  return l:count
+endfunction
+
+function! s:get_min_header_level(headers)
+  " The minimum level of any header in a list of [level, title] pairs.
+  if len(a:headers) == 0
+    return 0
+  let l:minlevel = a:headers[0][0]
+  for [l:level, _] in a:headers
+    let l:minlevel = min([l:minlevel, l:level])
+  endfor
+  return l:minlevel
+
 
 function! s:read_captions(files)
   let result = {}
-  let subcaption_level = vimwiki#vars#get_wikilocal('diary_subcaption_level')
+  let caption_level = vimwiki#vars#get_wikilocal('diary_caption_level')
 
   for fl in a:files
     " remove paths and extensions
-    let fl_key = substitute(fnamemodify(fl, ':t'), vimwiki#vars#get_wikilocal('ext').'$', '', '')
-    let result[fl_key] = {}
+    let l:fl_captions = {}
 
-    if filereadable(fl)
-      if subcaption_level < 1 " No sub-captions
-        let result[fl_key]['top'] = s:get_first_header(fl)
-        let result[fl_key]['sub'] = []
-      else
-        let result[fl_key]['sub'] = s:get_all_headers(fl, subcaption_level)
-        if subcaption_level == 1 " No top-level caption
-          let result[fl_key]['top'] = ''
-        else
-          let result[fl_key]['top'] = s:get_first_header(fl, subcaption_level - 1)
+    " Default; no captions from the file.
+    let l:fl_captions['top'] = ''
+    let l:fl_captions['rest'] = []
+
+    if caption_level >= 0 and filereadable(fl)
+      if caption_level == 0
+        " Take first header of any level as the top caption.
+        let l:fl_captions['top'] = s:get_first_header(fl)
+      else:
+        let l:headers = s:get_all_headers(fl, caption_level)
+        if len(l:headers) > 0
+          " If first header is the only one at its level or less, then make it the top caption.
+          let [l:first_level, l:first_header] = l:headers[0]
+          if s:count_headers_level_less_equal(l:headers, l:first_level) == 1
+            let l:fl_captions['top'] = l:first_header
+            call remove(l:headers, 0)
+
+          let l:min_header_level = s:get_min_header_level(l:headers)
+          for [level, header] in l:headers
+            call add(l:fl_captions['rest'], [level - l:min_header_level, header])
+          endfor
         endif
       endif
-
     endif
 
+    let fl_key = substitute(fnamemodify(fl, ':t'), vimwiki#vars#get_wikilocal('ext').'$', '', '')
+    let result[fl_key] = l:fl_captions
   endfor
   return result
 endfunction
@@ -194,19 +234,25 @@ function! s:format_diary()
           if empty(topcap) " When using markdown syntax, we should ensure we always have a link description.
             let topcap = fl
           endif
-        elseif empty(topcap)
-          let link_tpl = vimwiki#vars#get_global('WikiLinkTemplate1')
         endif
 
-        let entry = substitute(link_tpl, '__LinkUrl__', fl, '')
-        let entry = substitute(entry, '__LinkDescription__', cap, '')
+        if empty(topcap)
+          let top_link_tpl = vimwiki#vars#get_global('WikiLinkTemplate1')
+        else
+          let top_link_tpl = link_tpl
+        endif
+
+        let entry = substitute(top_link_tpl, '__LinkUrl__', fl, '')
+        let entry = substitute(entry, '__LinkDescription__', topcap, '')
         call add(result, repeat(' ', vimwiki#lst#get_list_margin()).'* '.entry)
 
-        for subcap in captions['sub']
-          let entry = substitute(vimwiki#vars#get_global('WikiLinkTemplate2'),
-                \ '__LinkUrl__', fl.'#'.subcap, '')
+        for [depth, subcap] in captions['rest']
+          if empty(subcap)
+            continue
+          endif
+          let entry = substitute(link_tpl, '__LinkUrl__', fl.'#'.subcap, '')
           let entry = substitute(entry, '__LinkDescription__', subcap, '')
-          call add(result, repeat(' ', vimwiki#lst#get_list_margin() * 2).'- '.entry)
+          call add(result, repeat(' ', vimwiki#lst#get_list_margin() * (2 + depth)).'- '.entry)
         endfo
       endfor
 
