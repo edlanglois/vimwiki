@@ -105,7 +105,7 @@ function! s:count_headers_level_less_equal(headers, maxlevel)
   " Count headers with level <=  maxlevel in a list of [level, title] pairs.
   let l:count = 0
   for [header_level, _] in a:headers
-    if header_level <= level
+    if header_level <= maxlevel
       let l:count += 1
     endif
   endfor
@@ -149,8 +149,6 @@ function! s:read_captions(files)
             let l:fl_captions['top'] = l:first_header
             call remove(l:headers, 0)
           endif
-          echom 'headers'
-          echom l:headers
 
           let l:min_header_level = s:get_min_header_level(l:headers)
           for [level, header] in l:headers
