@@ -192,6 +192,7 @@ function! s:populate_wikilocal_options()
         \ 'diary_index': 'diary',
         \ 'diary_rel_path': 'diary/',
         \ 'diary_sort': 'desc',
+        \ 'diary_caption_level': 0,
         \ 'ext': '.wiki',
         \ 'index': 'index',
         \ 'list_margin': -1,
@@ -302,6 +303,9 @@ function! vimwiki#vars#populate_syntax_vars(syntax)
       let g:vimwiki_syntax_variables[a:syntax]['rxH'.i] =
             \ '^\s*'.header_symbol.'\{'.i.'}[^'.header_symbol.'].*[^'.header_symbol.']'
             \ .header_symbol.'\{'.i.'}\s*$'
+      let g:vimwiki_syntax_variables[a:syntax]['rxH'.i.'_Text'] =
+            \ '^\s*'.header_symbol.'\{'.i.'}\zs[^'.header_symbol.'].*[^'.header_symbol.']\ze'
+            \ .header_symbol.'\{'.i.'}\s*$'
       let g:vimwiki_syntax_variables[a:syntax]['rxH'.i.'_Start'] =
             \ '^\s*'.header_symbol.'\{'.i.'}[^'.header_symbol.'].*[^'.header_symbol.']'
             \ .header_symbol.'\{'.i.'}\s*$'
@@ -318,6 +322,8 @@ function! vimwiki#vars#populate_syntax_vars(syntax)
             \ repeat(header_symbol, i).' __Header__'
       let g:vimwiki_syntax_variables[a:syntax]['rxH'.i] =
             \ '^\s*'.header_symbol.'\{'.i.'}[^'.header_symbol.'].*$'
+      let g:vimwiki_syntax_variables[a:syntax]['rxH'.i.'_Text'] =
+            \ '^\s*'.header_symbol.'\{'.i.'}\zs[^'.header_symbol.'].*\ze$'
       let g:vimwiki_syntax_variables[a:syntax]['rxH'.i.'_Start'] =
             \ '^\s*'.header_symbol.'\{'.i.'}[^'.header_symbol.'].*$'
       let g:vimwiki_syntax_variables[a:syntax]['rxH'.i.'_End'] =
