@@ -136,7 +136,7 @@ function! s:read_captions(files)
     let l:fl_captions['top'] = ''
     let l:fl_captions['rest'] = []
 
-    if caption_level >= 0 and filereadable(fl)
+    if caption_level >= 0 && filereadable(fl)
       if caption_level == 0
         " Take first header of any level as the top caption.
         let l:fl_captions['top'] = s:get_first_header(fl)
