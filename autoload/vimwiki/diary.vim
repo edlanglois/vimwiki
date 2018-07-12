@@ -149,6 +149,8 @@ function! s:read_captions(files)
             let l:fl_captions['top'] = l:first_header
             call remove(l:headers, 0)
           endif
+          echom 'headers'
+          echom l:headers
 
           let l:min_header_level = s:get_min_header_level(l:headers)
           for [level, header] in l:headers
