@@ -116,6 +116,7 @@ function! s:get_min_header_level(headers)
   " The minimum level of any header in a list of [level, title] pairs.
   if len(a:headers) == 0
     return 0
+  endif
   let l:minlevel = a:headers[0][0]
   for [l:level, _] in a:headers
     let l:minlevel = min([l:minlevel, l:level])
