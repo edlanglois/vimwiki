@@ -2219,7 +2219,7 @@ Key                   Default value~
 diary_caption_level   0
 
 Description~
-Control the presence of captions in the diary index linking to headers within
+Controls the presence of captions in the diary index linking to headers within
 the diary pages.
 
 Possible values:
