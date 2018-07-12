@@ -186,17 +186,21 @@ function! s:format_diary()
 
       for [fl, captions] in s:sort(items(g_files[year][month]))
         let topcap = captions['top']
-        if empty(topcap)
-          let entry = substitute(vimwiki#vars#get_global('WikiLinkTemplate1'),
-                \ '__LinkUrl__', fl, '')
-          let entry = substitute(entry, '__LinkDescription__', topcap, '')
-          call add(result, repeat(' ', vimwiki#lst#get_list_margin()).'* '.entry)
-        else
-          let entry = substitute(vimwiki#vars#get_global('WikiLinkTemplate2'),
-                \ '__LinkUrl__', fl, '')
-          let entry = substitute(entry, '__LinkDescription__', topcap, '')
-          call add(result, repeat(' ', vimwiki#lst#get_list_margin()).'* '.entry)
+        let link_tpl = vimwiki#vars#get_global('WikiLinkTemplate2')
+
+        if vimwiki#vars#get_wikilocal('syntax') == 'markdown'
+          let link_tpl = vimwiki#vars#get_syntaxlocal('Weblink1Template')
+
+          if empty(topcap) " When using markdown syntax, we should ensure we always have a link description.
+            let topcap = fl
+          endif
+        elseif empty(topcap)
+          let link_tpl = vimwiki#vars#get_global('WikiLinkTemplate1')
         endif
+
+        let entry = substitute(link_tpl, '__LinkUrl__', fl, '')
+        let entry = substitute(entry, '__LinkDescription__', cap, '')
+        call add(result, repeat(' ', vimwiki#lst#get_list_margin()).'* '.entry)
 
         for subcap in captions['sub']
           let entry = substitute(vimwiki#vars#get_global('WikiLinkTemplate2'),
@@ -219,6 +223,9 @@ endfunction
 function! vimwiki#diary#make_note(wnum, ...)
   if a:wnum == 0
     let wiki_nr = vimwiki#vars#get_bufferlocal('wiki_nr')
+    if wiki_nr < 0  " this happens when e.g. VimwikiMakeDiaryNote was called outside a wiki buffer
+      let wiki_nr = 0
+    endif
   else
     let wiki_nr = a:wnum - 1
   endif
