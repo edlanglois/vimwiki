@@ -181,6 +181,7 @@ endfunction
 
 function! s:populate_wikilocal_options()
   let default_values = {
+        \ 'auto_diary_index': 0,
         \ 'auto_export': 0,
         \ 'auto_tags': 0,
         \ 'auto_toc': 0,
@@ -198,12 +199,12 @@ function! s:populate_wikilocal_options()
         \ 'list_margin': -1,
         \ 'maxhi': 0,
         \ 'nested_syntaxes': {},
-        \ 'path': '~/vimwiki/',
+        \ 'path': $HOME . '/vimwiki/',
         \ 'path_html': '',
         \ 'syntax': 'default',
         \ 'template_default': 'default',
         \ 'template_ext': '.tpl',
-        \ 'template_path': '~/vimwiki/templates/',
+        \ 'template_path': $HOME . '/vimwiki/templates/',
         \ }
 
   let g:vimwiki_wikilocal_vars = []
@@ -364,7 +365,7 @@ function! vimwiki#vars#populate_syntax_vars(syntax)
   "create regexp for bulleted list items
   if !empty(g:vimwiki_syntax_variables[a:syntax].bullet_types)
     let g:vimwiki_syntax_variables[a:syntax].rxListBullet =
-          \ join( map(g:vimwiki_syntax_variables[a:syntax].bullet_types,
+          \ join( map(copy(g:vimwiki_syntax_variables[a:syntax].bullet_types),
           \'vimwiki#u#escape(v:val).'
           \ .'repeat("\\+", g:vimwiki_syntax_variables[a:syntax].recurring_bullets)'
           \ ) , '\|')
