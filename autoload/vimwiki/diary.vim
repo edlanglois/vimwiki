@@ -69,14 +69,14 @@ function! s:get_first_header(fl, ...)
   " A level of -1 means any level.
   let a:level = get(a:, 1, -1)
   if a:level == -1
-    let l:header_rx = vimwiki#vars#get_syntaxlocal('rxHeader')
+    let header_rx = vimwiki#vars#get_syntaxlocal('rxHeader')
   else
-    let l:header_rx = vimwiki#vars#get_syntaxlocal('rxH'.a:level.'_Text')
+    let header_rx = vimwiki#vars#get_syntaxlocal('rxH'.a:level.'_Text')
   endif
 
   for line in readfile(a:fl, '', s:vimwiki_max_scan_for_caption)
-    if line =~# l:header_rx
-      return vimwiki#u#trim(matchstr(line, l:header_rx))
+    if line =~# header_rx
+      return vimwiki#u#trim(matchstr(line, header_rx))
     endif
   endfor
   return ''
@@ -85,32 +85,32 @@ endfunction
 function! s:get_all_headers(fl, maxlevel)
   " Get a list of all headers in a file up to a given level.
   " Returns a list whose elements are pairs [level, title]
-  let l:headers_rx = {}
+  let headers_rx = {}
   for i in range(1, a:maxlevel)
-    let l:headers_rx[i] = vimwiki#vars#get_syntaxlocal('rxH'.i.'_Text')
+    let headers_rx[i] = vimwiki#vars#get_syntaxlocal('rxH'.i.'_Text')
   endfor
 
-  let l:headers = []
+  let headers = []
   for line in readfile(a:fl, '')
-    for [i, header_rx] in items(l:headers_rx)
-      if line =~# l:header_rx
-        call add(l:headers, [i, vimwiki#u#trim(matchstr(line, l:header_rx))])
+    for [i, header_rx] in items(headers_rx)
+      if line =~# header_rx
+        call add(headers, [i, vimwiki#u#trim(matchstr(line, header_rx))])
         break
       endif
     endfor
   endfor
-  return l:headers
+  return headers
 endfunction
 
 function! s:count_headers_level_less_equal(headers, maxlevel)
   " Count headers with level <=  maxlevel in a list of [level, title] pairs.
-  let l:count = 0
-  for [l:header_level, _] in a:headers
-    if l:header_level <= a:maxlevel
-      let l:count += 1
+  let count = 0
+  for [header_level, _] in a:headers
+    if header_level <= a:maxlevel
+      let count += 1
     endif
   endfor
-  return l:count
+  return count
 endfunction
 
 function! s:get_min_header_level(headers)
@@ -118,11 +118,11 @@ function! s:get_min_header_level(headers)
   if len(a:headers) == 0
     return 0
   endif
-  let l:minlevel = a:headers[0][0]
-  for [l:level, _] in a:headers
-    let l:minlevel = min([l:minlevel, l:level])
+  let minlevel = a:headers[0][0]
+  for [level, _] in a:headers
+    let minlevel = min([minlevel, level])
   endfor
-  return l:minlevel
+  return minlevel
 endfunction
 
 
@@ -132,36 +132,36 @@ function! s:read_captions(files)
 
   for fl in a:files
     " remove paths and extensions
-    let l:fl_captions = {}
+    let fl_captions = {}
 
     " Default; no captions from the file.
-    let l:fl_captions['top'] = ''
-    let l:fl_captions['rest'] = []
+    let fl_captions['top'] = ''
+    let fl_captions['rest'] = []
 
     if caption_level >= 0 && filereadable(fl)
       if caption_level == 0
         " Take first header of any level as the top caption.
-        let l:fl_captions['top'] = s:get_first_header(fl)
+        let fl_captions['top'] = s:get_first_header(fl)
       else
-        let l:headers = s:get_all_headers(fl, caption_level)
-        if len(l:headers) > 0
+        let headers = s:get_all_headers(fl, caption_level)
+        if len(headers) > 0
           " If first header is the only one at its level or less, then make it the top caption.
-          let [l:first_level, l:first_header] = l:headers[0]
-          if s:count_headers_level_less_equal(l:headers, l:first_level) == 1
-            let l:fl_captions['top'] = l:first_header
-            call remove(l:headers, 0)
+          let [first_level, first_header] = headers[0]
+          if s:count_headers_level_less_equal(headers, first_level) == 1
+            let fl_captions['top'] = first_header
+            call remove(headers, 0)
           endif
 
-          let l:min_header_level = s:get_min_header_level(l:headers)
-          for [level, header] in l:headers
-            call add(l:fl_captions['rest'], [level - l:min_header_level, header])
+          let min_header_level = s:get_min_header_level(headers)
+          for [level, header] in headers
+            call add(fl_captions['rest'], [level - min_header_level, header])
           endfor
         endif
       endif
     endif
 
     let fl_key = substitute(fnamemodify(fl, ':t'), vimwiki#vars#get_wikilocal('ext').'$', '', '')
-    let result[fl_key] = l:fl_captions
+    let result[fl_key] = fl_captions
   endfor
   return result
 endfunction
