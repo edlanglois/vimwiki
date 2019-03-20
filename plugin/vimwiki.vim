@@ -9,6 +9,11 @@ if exists("g:loaded_vimwiki") || &cp
 endif
 let g:loaded_vimwiki = 1
 
+" Set to version number for release, otherwise -1 for dev-branch
+let s:plugin_vers = -1
+
+" Get the directory the script is installed in
+let s:plugin_dir = expand('<sfile>:p:h:h')
 
 let s:old_cpo = &cpo
 set cpo&vim
@@ -31,7 +36,7 @@ function! s:setup_buffer_leave()
 
   let &autowriteall = s:vimwiki_autowriteall_saved
 
-  if vimwiki#vars#get_global('menu') != ""
+  if !empty(vimwiki#vars#get_global('menu'))
     exe 'nmenu disable '.vimwiki#vars#get_global('menu').'.Table'
   endif
 endfunction
@@ -147,7 +152,7 @@ function! s:set_global_options()
   let s:vimwiki_autowriteall_saved = &autowriteall
   let &autowriteall = vimwiki#vars#get_global('autowriteall')
 
-  if vimwiki#vars#get_global('menu') !=# ''
+  if !empty(vimwiki#vars#get_global('menu'))
     exe 'nmenu enable '.vimwiki#vars#get_global('menu').'.Table'
   endif
 endfunction
@@ -157,23 +162,25 @@ endfunction
 " Vim defaults. So we enforce our settings here when the cursor enters a
 " Vimwiki buffer.
 function! s:set_windowlocal_options()
-  let foldmethod = vimwiki#vars#get_global('folding')
-  if foldmethod =~? '^expr.*'
-    setlocal foldmethod=expr
-    setlocal foldexpr=VimwikiFoldLevel(v:lnum)
-    setlocal foldtext=VimwikiFoldText()
-  elseif foldmethod =~? '^list.*' || foldmethod =~? '^lists.*'
-    setlocal foldmethod=expr
-    setlocal foldexpr=VimwikiFoldListLevel(v:lnum)
-    setlocal foldtext=VimwikiFoldText()
-  elseif foldmethod =~? '^syntax.*'
-    setlocal foldmethod=syntax
-    setlocal foldtext=VimwikiFoldText()
-  elseif foldmethod =~? '^custom.*'
-    " do nothing
-  else
-    setlocal foldmethod=manual
-    normal! zE
+  if !&diff   " if Vim is currently in diff mode, don't interfere with its folding
+    let foldmethod = vimwiki#vars#get_global('folding')
+    if foldmethod =~? '^expr.*'
+      setlocal foldmethod=expr
+      setlocal foldexpr=VimwikiFoldLevel(v:lnum)
+      setlocal foldtext=VimwikiFoldText()
+    elseif foldmethod =~? '^list.*' || foldmethod =~? '^lists.*'
+      setlocal foldmethod=expr
+      setlocal foldexpr=VimwikiFoldListLevel(v:lnum)
+      setlocal foldtext=VimwikiFoldText()
+    elseif foldmethod =~? '^syntax.*'
+      setlocal foldmethod=syntax
+      setlocal foldtext=VimwikiFoldText()
+    elseif foldmethod =~? '^custom.*'
+      " do nothing
+    else
+      setlocal foldmethod=manual
+      normal! zE
+    endif
   endif
 
   if vimwiki#vars#get_global('conceallevel') && exists("+conceallevel")
@@ -185,6 +192,23 @@ function! s:set_windowlocal_options()
   endif
 endfunction
 
+
+function! s:get_version()
+  if s:plugin_vers != -1
+    echo "Stable version: " . s:plugin_vers
+  else
+    let a:plugin_rev    = system("git --git-dir " . s:plugin_dir . "/.git rev-parse --short HEAD")
+    let a:plugin_branch = system("git --git-dir " . s:plugin_dir . "/.git rev-parse --abbrev-ref HEAD")
+    let a:plugin_date   = system("git --git-dir " . s:plugin_dir . "/.git show -s --format=%ci")
+    if v:shell_error == 0
+      echo "Branch: " . a:plugin_branch
+      echo "Revision: " . a:plugin_rev
+      echo "Date: " . a:plugin_date
+    else
+      echo "Unknown version"
+    endif
+  endif
+endfunction
 
 
 
@@ -229,15 +253,15 @@ endif
 
 augroup vimwiki
   autocmd!
+  autocmd ColorScheme * call s:setup_cleared_syntax()
   for s:ext in s:known_extensions
     exe 'autocmd BufNewFile,BufRead *'.s:ext.' call s:setup_new_wiki_buffer()'
     exe 'autocmd BufEnter *'.s:ext.' call s:setup_buffer_enter()'
     exe 'autocmd BufLeave *'.s:ext.' call s:setup_buffer_leave()'
-    exe 'autocmd ColorScheme *'.s:ext.' call s:setup_cleared_syntax()'
     " Format tables when exit from insert mode. Do not use textwidth to
     " autowrap tables.
     if vimwiki#vars#get_global('table_auto_fmt')
-      exe 'autocmd InsertLeave *'.s:ext.' call vimwiki#tbl#format(line("."))'
+      exe 'autocmd InsertLeave *'.s:ext.' call vimwiki#tbl#format(line("."), 2)'
       exe 'autocmd InsertEnter *'.s:ext.' call vimwiki#tbl#reset_tw(line("."))'
     endif
     if vimwiki#vars#get_global('folding') =~? ':quick$'
@@ -279,47 +303,49 @@ command! -count=1 VimwikiMakeTomorrowDiaryNote
 command! VimwikiDiaryGenerateLinks
       \ call vimwiki#diary#generate_diary_section()
 
+command! VimwikiShowVersion call s:get_version()
+
 
 
 let s:map_prefix = vimwiki#vars#get_global('map_prefix')
 
-if !hasmapto('<Plug>VimwikiIndex')
+if !hasmapto('<Plug>VimwikiIndex') && maparg(s:map_prefix.'w', 'n') == ""
   exe 'nmap <silent><unique> '.s:map_prefix.'w <Plug>VimwikiIndex'
 endif
 nnoremap <unique><script> <Plug>VimwikiIndex :VimwikiIndex<CR>
 
-if !hasmapto('<Plug>VimwikiTabIndex')
+if !hasmapto('<Plug>VimwikiTabIndex') && maparg(s:map_prefix.'t', 'n') == ""
   exe 'nmap <silent><unique> '.s:map_prefix.'t <Plug>VimwikiTabIndex'
 endif
 nnoremap <unique><script> <Plug>VimwikiTabIndex :VimwikiTabIndex<CR>
 
-if !hasmapto('<Plug>VimwikiUISelect')
+if !hasmapto('<Plug>VimwikiUISelect') && maparg(s:map_prefix.'s', 'n') == ""
   exe 'nmap <silent><unique> '.s:map_prefix.'s <Plug>VimwikiUISelect'
 endif
 nnoremap <unique><script> <Plug>VimwikiUISelect :VimwikiUISelect<CR>
 
-if !hasmapto('<Plug>VimwikiDiaryIndex')
+if !hasmapto('<Plug>VimwikiDiaryIndex') && maparg(s:map_prefix.'i', 'n') == ""
   exe 'nmap <silent><unique> '.s:map_prefix.'i <Plug>VimwikiDiaryIndex'
 endif
 nnoremap <unique><script> <Plug>VimwikiDiaryIndex :VimwikiDiaryIndex<CR>
 
-if !hasmapto('<Plug>VimwikiDiaryGenerateLinks')
+if !hasmapto('<Plug>VimwikiDiaryGenerateLinks') && maparg(s:map_prefix.'<Leader>i', 'n') == ""
   exe 'nmap <silent><unique> '.s:map_prefix.'<Leader>i <Plug>VimwikiDiaryGenerateLinks'
 endif
 nnoremap <unique><script> <Plug>VimwikiDiaryGenerateLinks :VimwikiDiaryGenerateLinks<CR>
 
-if !hasmapto('<Plug>VimwikiMakeDiaryNote')
+if !hasmapto('<Plug>VimwikiMakeDiaryNote') && maparg(s:map_prefix.'<Leader>w', 'n') == ""
   exe 'nmap <silent><unique> '.s:map_prefix.'<Leader>w <Plug>VimwikiMakeDiaryNote'
 endif
 nnoremap <unique><script> <Plug>VimwikiMakeDiaryNote :VimwikiMakeDiaryNote<CR>
 
-if !hasmapto('<Plug>VimwikiTabMakeDiaryNote')
+if !hasmapto('<Plug>VimwikiTabMakeDiaryNote') && maparg(s:map_prefix.'<Leader>t', 'n') == ""
   exe 'nmap <silent><unique> '.s:map_prefix.'<Leader>t <Plug>VimwikiTabMakeDiaryNote'
 endif
 nnoremap <unique><script> <Plug>VimwikiTabMakeDiaryNote
       \ :VimwikiTabMakeDiaryNote<CR>
 
-if !hasmapto('<Plug>VimwikiMakeYesterdayDiaryNote')
+if !hasmapto('<Plug>VimwikiMakeYesterdayDiaryNote') && maparg(s:map_prefix.'<Leader>y', 'n') == ""
   exe 'nmap <silent><unique> '.s:map_prefix.'<Leader>y <Plug>VimwikiMakeYesterdayDiaryNote'
 endif
 nnoremap <unique><script> <Plug>VimwikiMakeYesterdayDiaryNote

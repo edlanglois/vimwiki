@@ -324,6 +324,11 @@ function! vimwiki#diary#goto_diary_index(wnum)
   endif
 
   call vimwiki#base#edit_file('e', s:diary_index(idx), '')
+
+  if vimwiki#vars#get_wikilocal('auto_diary_index')
+    call vimwiki#diary#generate_diary_section()
+    write! " save changes
+  endif
 endfunction
 
 
@@ -375,7 +380,7 @@ function! vimwiki#diary#generate_diary_section()
   if vimwiki#path#is_equal(current_file, diary_file)
     let content_rx = '^\%(\s*[*-] \)\|\%(^\s*$\)\|\%('.vimwiki#vars#get_syntaxlocal('rxHeader').'\)'
     call vimwiki#base#update_listing_in_buffer(s:format_diary(),
-          \ vimwiki#vars#get_wikilocal('diary_header'), content_rx, line('$')+1, 1)
+          \ vimwiki#vars#get_wikilocal('diary_header'), content_rx, line('$')+1, 1, 1)
   else
     echomsg 'Vimwiki Error: You can generate diary links only in a diary index page!'
   endif

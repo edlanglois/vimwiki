@@ -513,6 +513,12 @@ gqq                     Format table. If you made some changes to a table
  or                     without swapping insert/normal modes this command
 gww                     will reformat it.
 
+                        *vimwiki_gq1*  *vimwiki_gw1*
+gq1                     Fast format table. The same as the previous, except
+ or                     that only a few lines above the current line are
+gw1                     tested. If the alignment of the current line differs,
+                        then the whole table gets reformatted.
+
                         *vimwiki_<A-Left>*
 <A-Left>                Move current table column to the left.
                         See |:VimwikiTableMoveColumnLeft|
@@ -707,7 +713,7 @@ Vimwiki file.
 *:VimwikiGoto*
     Goto link provided by an argument. For example: >
         :VimwikiGoto HelloWorld
-<    opens opens/creates HelloWorld wiki page.
+<    opens/creates HelloWorld wiki page.
 
     Supports |cmdline-completion| for link name.
 
@@ -877,8 +883,20 @@ is decorated: >
   super^script^
   sub,,script,,
 
+For Markdown syntax these variations are used: >
+
+  **bold text** or __bold text__
+  *italic text* or _italic text_
+  ***bold_italic text*** or ___italic_bold text___
+
 Furthermore, there are a number of words which are highlighted extra flashy:
 TODO, DONE, STARTED, FIXME, FIXED, XXX.
+
+When rendered as HTML, code blocks containing only a hash prefixed 6 digit hex
+number will be colored as themselves.  For example >
+ `#ffe119`
+Becomes >
+ <code style='background-color:#ffe119;color:black;'>#ffe119</code>
 
 ------------------------------------------------------------------------------
 5.2. Links                                              *vimwiki-syntax-links*
@@ -1668,7 +1686,7 @@ checkbox without a childitem.
 
 It is possible to toggle several list items using visual mode. But note that
 instead of toggling every item individually, all items get checked if the
-first item is unchecked and all items get unchecked if the first item is
+first item was unchecked and all items get unchecked if the first item was
 checked.
 
 Use gl<Space> (see |vimwiki_gl<Space>|) to remove a single checkbox and
@@ -1715,6 +1733,15 @@ values: >
 
 To indent table indent the first row. Then format it with 'gqq'.
 
+You can specify the type of horizontal alignment for columns in the separator
+using the ':' character. The default is left-align.  >
+
+ | Date       |  Item  |   Price |
+ |------------|:------:|--------:|
+ | yest       | Coffee |  $15.00 |
+ | 2017-02-13 |  Tea   |   $2.10 |
+ | 2017-03-14 |  Cake  | $143.12 |
+<
 
 ==============================================================================
 10. Diary                                                      *vimwiki-diary*
@@ -1754,7 +1781,7 @@ See |g:vimwiki_use_calendar| option to turn it off/on.
 
 
 ==============================================================================
-12. Anchors                                                  *vimwiki-anchors*
+11. Anchors                                                  *vimwiki-anchors*
 
 Every header, tag, and bold text can be used as an anchor.  To jump to it, use
 a wikilink of the form >
@@ -2043,13 +2070,17 @@ Each template could look like: >
     </html>
 
 where
-  %title% is replaced by a wiki page name or by a |vimwiki-title|
-  %date% is replaced with the current date or by |vimwiki-date|
-  %root_path% is replaced by a count of ../ for pages buried in subdirs:
+  `%title%` is replaced by a wiki page name or by a |vimwiki-title|
+  `%date%` is replaced with the current date or by |vimwiki-date|
+  `%root_path%` is replaced by a count of ../ for pages buried in subdirs:
     if you have wikilink [[dir1/dir2/dir3/my page in a subdir]] then
-    %root_path% is replaced by '../../../'.
+    `%root_path%` is replaced by '../../../'.
+  `%wiki_path%` Path to current wiki-file.` The file path to the current wiki
+    file. For example, if you are on page a/b.wiki %wiki-path% contains
+    "a/b.wiki". Mostly useful if you want to link the to raw wiki page from
+    the rendered version.
 
-  %content% is replaced by a wiki file content.
+  `%content%` is replaced by a wiki file content.
 
 
 The default template will be applied to all wiki pages unless a page specifies
@@ -2315,6 +2346,17 @@ current wiki page is saved: >
   let g:vimwiki_list = [{'path': '~/my_site/', 'auto_tags': 1}]
 
 
+*vimwiki-option-auto_diary_index*
+------------------------------------------------------------------------------
+Key               Default value     Values~
+auto_diary_index  0                 0, 1
+
+Description~
+Set this option to 1 to automatically update the diary index when opened.
+See |:VimwikiDiaryGenerateLinks|:  >
+  let g:vimwiki_list = [{'path': '~/my_site/', 'auto_diary_index': 1}]
+
+
 ------------------------------------------------------------------------------
 12.4 Global Options                                   *vimwiki-global-options*
 
@@ -2330,7 +2372,7 @@ Global options are configured using the following pattern: >
 Highlight headers with =Reddish=, ==Greenish==, ===Blueish=== colors.
 
 Value           Description~
-1               Use VimwikiHeader1-VimwikiHeader6 group colors to highlight
+1               Use VimwikiHeader1 - VimwikiHeader6 group colors to highlight
                 different header levels.
 0               Use |hl-Title| color for headers.
 Default: 0
@@ -2347,10 +2389,12 @@ Highlight checked list items with a special color:
 
 Value           Description~
 0               Don't highlight anything.
-1               Highlight checked [X] list item with |group-name| "Comment".
-2               Highlight checked [X] list item and all its child items.
+1               Highlight only the first line of a checked [X] list item.
+2               Highlight a complete checked list item and all its child items.
 
 Default: 0
+
+The |group-name| "Comment" is used for highlighting.
 
 Note: Option 2 does not work perfectly.  Specifically, it might break if the
 list item contains preformatted text or if you mix tabs and spaces for
@@ -2513,6 +2557,18 @@ See |vimwiki-calendar|.
 Value           Description~
 0               Do not use calendar.
 1               Use calendar.
+
+Default: 1
+
+
+------------------------------------------------------------------------------
+*g:vimwiki_create_link*
+
+Create target wiki page if it does not exist. See |:VimwikiFollowLink|.
+
+Value           Description~
+0               Do not create target wiki page.
+1               Create target wiki page.
 
 Default: 1
 
@@ -2880,6 +2936,15 @@ The default is 'Contents'.
 
 
 ------------------------------------------------------------------------------
+*g:vimwiki_toc_header_level*
+
+The header level of the Table of Contents (see |vimwiki-toc|). Valid values
+are from 1 to 6.
+
+The default is 1.
+
+
+------------------------------------------------------------------------------
 *g:vimwiki_map_prefix*
 
 A string which specifies the prefix for all global mappings (and some local
@@ -2919,14 +2984,7 @@ Your help in making Vimwiki better is really appreciated!
 Any help, whether it is a spelling correction or a code snippet to patch --
 everything is welcomed.
 
-Before filing a bug or starting to write a patch, check the latest development
-version from https://github.com/vimwiki/vimwiki/tree/dev to see if your
-problem is already fixed.
-
-Issues can be filed at https://github.com/vimwiki/vimwiki/issues/.
-
-If you want to provide a pull request on GitHub, please start from the dev
-branch, not from the master branch.
+See CONTRIBUTING.md for info about how to file bugs etc.
 
 ==============================================================================
 15. Development                                          *vimwiki-development*
@@ -3265,7 +3323,7 @@ http://code.google.com/p/vimwiki/issues/list
     * Issue 210: HTML: para enclose header.
     * Issue 214: External links containing Chinese characters get trimmed.
     * Issue 218: Command to generate HTML file and open it in webbrowser. See
-      |:Vimwiki2HTMLBrowse|(bind to <leader>whh)
+      |:Vimwiki2HTMLBrowse|(bind to <Leader>whh)
     * NEW: Added <Leader>wh mapping to call |:Vimwiki2HTML|
 
 
