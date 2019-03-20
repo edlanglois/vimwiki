@@ -97,13 +97,13 @@ endfunction
 
 function! s:count_headers_level_less_equal(headers, maxlevel)
   " Count headers with level <=  maxlevel in a list of [level, title] pairs.
-  let count = 0
+  let l:count = 0
   for [header_level, _] in a:headers
     if header_level <= a:maxlevel
-      let count += 1
+      let l:count += 1
     endif
   endfor
-  return count
+  return l:count
 endfunction
 
 function! s:get_min_header_level(headers)
