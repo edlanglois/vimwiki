@@ -257,7 +257,7 @@ function! s:format_diary()
           let entry = substitute(link_tpl, '__LinkUrl__', fl.'#'.subcap, '')
           let entry = substitute(entry, '__LinkDescription__', subcap, '')
           call add(result, repeat(' ', vimwiki#lst#get_list_margin() * (2 + depth)).'- '.entry)
-        endfo
+        endfor
       endfor
 
     endfor
@@ -412,4 +412,3 @@ function vimwiki#diary#calendar_sign(day, month, year)
         \ a:year.'-'.month.'-'.day.vimwiki#vars#get_wikilocal('ext')
   return filereadable(expand(sfile))
 endfunction
-
