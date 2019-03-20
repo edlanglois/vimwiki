@@ -63,16 +63,9 @@ function! s:get_month_name(month)
   return vimwiki#vars#get_global('diary_months')[str2nr(a:month)]
 endfunction
 
-function! s:get_first_header(fl, ...)
+function! s:get_first_header(fl)
   " Get the first header in the file within the first s:vimwiki_max_scan_for_caption lines.
-  " If the optional argument 'level' is passed, the header must be at that level.
-  " A level of -1 means any level.
-  let a:level = get(a:, 1, -1)
-  if a:level == -1
-    let header_rx = vimwiki#vars#get_syntaxlocal('rxHeader')
-  else
-    let header_rx = vimwiki#vars#get_syntaxlocal('rxH'.a:level.'_Text')
-  endif
+  let header_rx = vimwiki#vars#get_syntaxlocal('rxHeader')
 
   for line in readfile(a:fl, '', s:vimwiki_max_scan_for_caption)
     if line =~# header_rx
